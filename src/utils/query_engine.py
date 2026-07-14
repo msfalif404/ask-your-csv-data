@@ -1,88 +1,85 @@
 import pandas as pd
 import plotly.express as px
+import operator
 from src.models.query import DataQuerySchema
 from src.models.visualization import VisualizationSchema
 
-def _apply_filters(df: pd.DataFrame, filters: list) -> pd.DataFrame:
+OPERATOR_MAP = {
+    "==": operator.eq,
+    "!=": operator.ne,
+    ">": operator.gt,
+    "<": operator.lt,
+    ">=": operator.ge,
+    "<=": operator.le
+}
+
+def _apply_filters(dataframe: pd.DataFrame, filters: list) -> pd.DataFrame:
     if not filters:
-        return df
+        return dataframe
         
-    temp_df = df.copy()
-    for f in filters:
-        col = f.column
-        val = f.value
-        op = f.operator
+    filtered_df = dataframe.copy()
+    for filter_condition in filters:
+        column_name = filter_condition.column
+        filter_value = filter_condition.value
+        operator_type = filter_condition.operator
         
-        if col not in temp_df.columns:
+        if column_name not in filtered_df.columns:
             continue
             
-        if temp_df[col].dtype in ['int64', 'float64']:
+        if filtered_df[column_name].dtype in ['int64', 'float64']:
             try:
-                val = float(val)
+                filter_value = float(filter_value)
             except ValueError:
                 pass
         
-        if op == "==":
-            temp_df = temp_df[temp_df[col] == val]
-        elif op == "!=":
-            temp_df = temp_df[temp_df[col] != val]
-        elif op == ">":
-            temp_df = temp_df[temp_df[col] > val]
-        elif op == "<":
-            temp_df = temp_df[temp_df[col] < val]
-        elif op == ">=":
-            temp_df = temp_df[temp_df[col] >= val]
-        elif op == "<=":
-            temp_df = temp_df[temp_df[col] <= val]
-        elif op == "in":
-            temp_df = temp_df[temp_df[col].astype(str).str.contains(str(val), case=False, na=False)]
+        if operator_type in OPERATOR_MAP:
+            op_func = OPERATOR_MAP[operator_type]
+            filtered_df = filtered_df[op_func(filtered_df[column_name], filter_value)]
+        elif operator_type == "in":
+            filtered_df = filtered_df[filtered_df[column_name].astype(str).str.contains(str(filter_value), case=False, na=False)]
             
-    return temp_df
+    return filtered_df
 
-def _apply_aggregation(df: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
+def _apply_aggregation(dataframe: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
     if not schema.metrics:
-        return df
+        return dataframe
         
-    valid_metrics = [m for m in schema.metrics if m in df.columns]
+    valid_metrics = [metric for metric in schema.metrics if metric in dataframe.columns]
     if not valid_metrics:
-        return df
+        return dataframe
         
     if schema.aggregation == "none":
-        cols = valid_metrics.copy()
+        selected_columns = valid_metrics.copy()
         if schema.group_by:
-            cols += [g for g in schema.group_by if g in df.columns and g not in cols]
-        return df[cols]
+            selected_columns += [group for group in schema.group_by if group in dataframe.columns and group not in selected_columns]
+        return dataframe[selected_columns]
         
     if schema.group_by:
-        valid_groups = [g for g in schema.group_by if g in df.columns]
+        valid_groups = [group for group in schema.group_by if group in dataframe.columns]
         if valid_groups:
-            return df.groupby(valid_groups)[valid_metrics].agg(schema.aggregation).reset_index()
+            return dataframe.groupby(valid_groups)[valid_metrics].agg(schema.aggregation).reset_index()
             
-    return df[valid_metrics].agg(schema.aggregation).to_frame().T
+    return dataframe[valid_metrics].agg(schema.aggregation).to_frame().T
 
-def _apply_sort_and_limit(df: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
-    temp_df = df.copy()
+def _apply_sort_and_limit(dataframe: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
+    sorted_df = dataframe.copy()
     
-    if schema.sort and schema.sort.column in temp_df.columns:
-        temp_df = temp_df.sort_values(by=schema.sort.column, ascending=schema.sort.ascending)
+    if schema.sort and schema.sort.column in sorted_df.columns:
+        sorted_df = sorted_df.sort_values(by=schema.sort.column, ascending=schema.sort.ascending)
         
     if schema.limit:
-        temp_df = temp_df.head(schema.limit)
+        sorted_df = sorted_df.head(schema.limit)
         
-    return temp_df
+    return sorted_df
 
-def execute_query(df: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
-    temp_df = _apply_filters(df, schema.filters)
-    temp_df = _apply_aggregation(temp_df, schema)
-    temp_df = _apply_sort_and_limit(temp_df, schema)
-    return temp_df
+def execute_query(dataframe: pd.DataFrame, schema: DataQuerySchema) -> pd.DataFrame:
+    processed_df = _apply_filters(dataframe, schema.filters)
+    processed_df = _apply_aggregation(processed_df, schema)
+    processed_df = _apply_sort_and_limit(processed_df, schema)
+    return processed_df
 
-def render_visualization(df_result: pd.DataFrame, schema: VisualizationSchema):
-    if schema.x_axis not in df_result.columns or schema.y_axis not in df_result.columns:
-        return None
-        
-    color_col = schema.color if schema.color in df_result.columns else None
-    fig = None
+def _build_plotly_figure(dataframe: pd.DataFrame, schema: VisualizationSchema):
+    color_column = schema.color if schema.color in dataframe.columns else None
     
     chart_builders = {
         "bar": px.bar,
@@ -92,19 +89,27 @@ def render_visualization(df_result: pd.DataFrame, schema: VisualizationSchema):
         "box": px.box
     }
 
-    try:
-        if schema.chart_type == "pie":
-            fig = px.pie(df_result, names=schema.x_axis, values=schema.y_axis, title=schema.title)
-        elif schema.chart_type in chart_builders:
-            builder = chart_builders[schema.chart_type]
-            fig = builder(df_result, x=schema.x_axis, y=schema.y_axis, color=color_col, title=schema.title)
+    if schema.chart_type == "pie":
+        return px.pie(dataframe, names=schema.x_axis, values=schema.y_axis, title=schema.title)
+        
+    if schema.chart_type in chart_builders:
+        builder = chart_builders[schema.chart_type]
+        return builder(dataframe, x=schema.x_axis, y=schema.y_axis, color=color_column, title=schema.title)
+        
+    return None
 
-        if fig:
-            fig.update_layout(
+def render_visualization(dataframe: pd.DataFrame, schema: VisualizationSchema):
+    if schema.x_axis not in dataframe.columns or schema.y_axis not in dataframe.columns:
+        return None
+        
+    try:
+        figure = _build_plotly_figure(dataframe, schema)
+        if figure:
+            figure.update_layout(
                 xaxis_title=schema.x_axis_title or schema.x_axis,
                 yaxis_title=schema.y_axis_title or schema.y_axis
             )
-    except Exception as e:
-        print(f"Error rendering chart: {str(e)}")
-        
-    return fig
+        return figure
+    except Exception as error:
+        print(f"Error rendering chart: {str(error)}")
+        return None

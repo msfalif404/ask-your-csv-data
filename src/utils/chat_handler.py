@@ -13,74 +13,75 @@ def initialize_chat_session():
         st.session_state.memory_saver = MemorySaver()
 
 def render_chat_history():
-    for i, msg in enumerate(st.session_state.messages):
-        with st.chat_message(msg["role"]):
-            if "text" in msg and msg["text"]:
-                st.markdown(msg["text"])
-            if "dataframe" in msg:
-                st.dataframe(msg["dataframe"])
-            if "figure" in msg:
-                st.plotly_chart(msg["figure"], key=f"hist_fig_{i}")
-            if "schema" in msg and "raw_df" in msg:
-                with st.expander("🔍 Audit Trail (LLM Query Plan vs Actual Data)"):
-                    st.markdown("**1. Gen AI Query Plan (DSL Schema)**")
-                    st.json(msg["schema"])
-                    st.markdown("**2. Actual Computed Data (Pandas)**")
-                    st.dataframe(msg["raw_df"])
-                    st.info("💡 Arsitektur *Text-to-DSL* menjamin bahwa AI tidak menghitung angka sendiri. Angka mutlak dihitung oleh Pandas berdasarkan skema kueri di atas, lalu dinarasikan oleh AI untuk mencegah halusinasi matematika.")
+    for i, message in enumerate(st.session_state.messages):
+        with st.chat_message(message["role"]):
+            if "text" in message and message["text"]:
+                st.markdown(message["text"])
+            if "dataframe" in message:
+                st.dataframe(message["dataframe"])
+            if "figure" in message:
+                st.plotly_chart(message["figure"], key=f"hist_fig_{i}")
+            if "schema" in message and "raw_df" in message:
+                _render_audit_trail(message["schema"], message["raw_df"])
 
-def process_graph_response(prompt: str, df: pd.DataFrame):
+def _render_audit_trail(schema: dict, dataframe: pd.DataFrame):
+    with st.expander("🔍 Audit Trail (LLM Query Plan vs Actual Data)"):
+        st.markdown("**1. Gen AI Query Plan (DSL Schema)**")
+        st.json(schema)
+        st.markdown("**2. Actual Computed Data (Pandas)**")
+        st.dataframe(dataframe)
+        st.info("💡 Arsitektur *Text-to-DSL* menjamin bahwa AI tidak menghitung angka sendiri. Angka mutlak dihitung oleh Pandas berdasarkan skema kueri di atas, lalu dinarasikan oleh AI untuk mencegah halusinasi matematika.")
+
+def _invoke_agent_graph(prompt: str) -> dict:
     graph = build_ask_data_graph(st.session_state.memory_saver)
-    
-    result_state = graph.invoke(
+    return graph.invoke(
         {"messages": [HumanMessage(content=prompt)]},
         config={"configurable": {"thread_id": "session_1"}}
     )
+
+def _handle_agent_error(error_message: str):
+    st.error(error_message)
+    st.session_state.messages.append({"role": "assistant", "text": error_message})
+
+def process_graph_response(prompt: str, dataframe: pd.DataFrame):
+    result_state = _invoke_agent_graph(prompt)
     
     schema = result_state.get("dsl_schema")
     intent = result_state.get("intent")
     analysis_text = result_state.get("analysis_text")
     
     if intent == "out_of_domain":
-        error_msg = "Maaf, pertanyaan Anda di luar konteks database penjualan kami (Out of Domain Guardrail). Silakan tanyakan hal yang relevan dengan data bisnis."
-        st.warning(error_msg)
-        st.session_state.messages.append({"role": "assistant", "text": error_msg})
+        warning_msg = "Maaf, pertanyaan Anda di luar konteks database penjualan kami (Out of Domain Guardrail). Silakan tanyakan hal yang relevan dengan data bisnis."
+        st.warning(warning_msg)
+        st.session_state.messages.append({"role": "assistant", "text": warning_msg})
         return
 
     if not schema:
-        error_msg = "Maaf, agen gagal memproses pertanyaan Anda."
-        st.error(error_msg)
-        st.session_state.messages.append({"role": "assistant", "text": error_msg})
+        _handle_agent_error("Maaf, agen gagal memproses pertanyaan Anda.")
         return
         
-    df_result = execute_query(df, schema)
+    df_result = execute_query(dataframe, schema)
+    
     final_text = analysis_text if analysis_text else (schema.insight_text if intent == "visualization" else schema.response_template)
     
-    is_cache_hit = result_state.get("is_cache_hit", False)
-    if is_cache_hit:
+    if result_state.get("is_cache_hit", False):
         final_text = f"⚡ **[Hit from Semantic Cache]**\n\n" + final_text
         
     st.markdown(final_text)
+    message_data = {"role": "assistant", "text": final_text, "schema": schema.model_dump(), "raw_df": df_result}
     
     if intent == "visualization":
-        fig = render_visualization(df_result, schema)
-        if fig:
-            st.plotly_chart(fig, key=f"new_fig_{uuid.uuid4().hex}")
-            msg_data = {"role": "assistant", "text": final_text, "figure": fig, "schema": schema.model_dump(), "raw_df": df_result}
+        figure = render_visualization(df_result, schema)
+        if figure:
+            st.plotly_chart(figure, key=f"new_fig_{uuid.uuid4().hex}")
+            message_data["figure"] = figure
         else:
             st.warning("Gagal merender grafik. Pastikan kolom valid.")
             st.dataframe(df_result)
-            msg_data = {"role": "assistant", "text": final_text, "dataframe": df_result, "schema": schema.model_dump(), "raw_df": df_result}
+            message_data["dataframe"] = df_result
     else:
         st.dataframe(df_result)
-        msg_data = {"role": "assistant", "text": final_text, "dataframe": df_result, "schema": schema.model_dump(), "raw_df": df_result}
+        message_data["dataframe"] = df_result
         
-    # Audit Trail Expander
-    with st.expander("🔍 Audit Trail (LLM Query Plan vs Actual Data)"):
-        st.markdown("**1. Gen AI Query Plan (DSL Schema)**")
-        st.json(schema.model_dump())
-        st.markdown("**2. Actual Computed Data (Pandas)**")
-        st.dataframe(df_result)
-        st.info("💡 Arsitektur *Text-to-DSL* menjamin bahwa AI tidak menghitung angka sendiri. Angka mutlak dihitung oleh Pandas berdasarkan skema kueri di atas, lalu dinarasikan oleh AI untuk mencegah halusinasi matematika.")
-        
-    st.session_state.messages.append(msg_data)
+    _render_audit_trail(schema.model_dump(), df_result)
+    st.session_state.messages.append(message_data)
