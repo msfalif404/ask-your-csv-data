@@ -10,7 +10,8 @@
         "Berapa rata-rata umur pelanggan kita?",
         "Buatkan grafik pie profit per segmen, khusus untuk region East yang penjualannya di atas 100",
         "Tampilkan sebaran data profit di tiap segment menggunakan box plot",
-        "Apakah ada korelasi antara cost dan profit? Buatkan scatter plot"
+        "Apakah ada korelasi antara cost dan profit? Buatkan scatter plot",
+        "Buatkan visualisasi yang menampilkan Top 5 Sub-Categories by Profit"
     ],
     "schemas": [
         {
@@ -247,6 +248,32 @@
                 "x_axis_title": "Cost",
                 "y_axis_title": "Profit",
                 "insight_text": "Grafik berikut menunjukkan hubungan antara biaya dan keuntungan."
+            }
+        },
+        {
+            "intent": "visualization",
+            "dsl_schema": {
+                "metrics": [
+                    "profit"
+                ],
+                "aggregation": "sum",
+                "group_by": [
+                    "sub_category"
+                ],
+                "filters": null,
+                "sort": {
+                    "column": "profit",
+                    "ascending": false
+                },
+                "limit": 5,
+                "chart_type": "bar",
+                "x_axis": "sub_category",
+                "y_axis": "profit",
+                "color": null,
+                "title": "Top 5 Sub-Categories by Profit",
+                "x_axis_title": "Sub-Category",
+                "y_axis_title": "Total Profit",
+                "insight_text": "Berikut adalah lima sub-kategori teratas berdasarkan total keuntungan."
             }
         }
     ]
