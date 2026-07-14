@@ -89,13 +89,25 @@ This project uses a tailored version of the classic **Superstore Sales Dataset**
 | `ship_mode` | Mode of shipping (String) |
 | `lon` / `lat` | Longitude and Latitude coordinates (Float) |
 
+## Codebase Walkthrough (For Developers)
+To understand the architecture and execution flow of this project, we recommend reviewing the codebase in the following order:
+
+1. **`main.py`**: The entry point of the Streamlit application. This file handles the UI initialization and user input capture.
+2. **`src/utils/chat_handler.py`**: Manages the chat interaction loop. It routes user inputs to the LangGraph agents and renders the final text and graphical responses to the UI.
+3. **`src/agents/graph.py`**: Defines the core `StateGraph` (LangGraph) architecture. It contains the routing logic that directs queries to specialized nodes based on the detected user intent.
+4. **`src/agents/nodes.py`**: Contains the specific implementation for each graph node (e.g., Router, Selector, Planner, Analyzer). This is where the LLM is invoked to construct the Domain Specific Language (DSL) schema.
+5. **`src/models/*.py`**: Defines the Pydantic schemas (such as `DataQuerySchema` and `VisualizationSchema`). These schemas are utilized by the Planner nodes to enforce strict, structured JSON outputs from the LLM.
+6. **`src/utils/query_engine.py`**: The execution engine. Once the LLM generates a schema, this module executes the deterministic Pandas operations (filtering, aggregating, sorting) to compute the actual data, preventing mathematical hallucinations.
+7. **`src/utils/chart_builder.py`**: Transforms the processed data from `query_engine.py` into interactive Plotly visualizations for visualization intents.
+8. **`src/prompts/templates/` & `src/prompts/manager.py`**: Contains the system prompts and instructions provided to each specialized agent.
+
 ## How to Run
 
 1. Clone this repository.
-2. Install the `uv` package manager (recommended) or use standard `pip`.
+2. Install the `uv` package manager (Sangat direkomendasikan karena lebih cepat dari standar `pip`).
 3. Install the required dependencies:
    ```bash
-   pip install -r requirements.txt
+   uv pip install -r requirements.txt
    ```
 4. Create a `.env` file in the root directory and add your keys:
    ```env
@@ -106,9 +118,8 @@ This project uses a tailored version of the classic **Superstore Sales Dataset**
    ```
 5. Run the Streamlit application:
    ```bash
-   python -m streamlit run main.py
+   uv run streamlit run main.py
    ```
-   *(Or if you are using `uv`: `uv run streamlit run main.py`)*
 
 ## Future Improvements
 1. **Cloud Redis Semantic Cache**: Migrate from the local FAISS in-memory cache to a distributed Redis Vector Store to support serverless deployment (e.g. on AWS or Heroku) where RAM instances are ephemeral.
