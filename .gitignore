@@ -12,3 +12,7 @@ wheels/
 # Environment variables
 .env
 .streamlit/secrets.toml
+
+# Semantic Caches
+tests/semantic_cache.index
+tests/semantic_cache.json
