@@ -1,0 +1,122 @@
+{
+  "test_cases": [
+    {
+      "id": "TC_001",
+      "category": "Basic Aggregation",
+      "query": "Berapa total keuntungan secara keseluruhan?",
+      "expected_intent": "answer_question",
+      "expected_metrics": ["profit"],
+      "expected_aggregation": "sum",
+      "description": "Menguji kemampuan agen menghitung total dari satu metrik utama."
+    },
+    {
+      "id": "TC_002",
+      "category": "Grouping & Aggregation",
+      "query": "Tampilkan total penjualan per sub-kategori",
+      "expected_intent": "answer_question",
+      "expected_metrics": ["gmv"],
+      "expected_group_by": ["sub_category"],
+      "expected_aggregation": "sum",
+      "description": "Menguji agregasi dasar dengan pengelompokan (group by)."
+    },
+    {
+      "id": "TC_003",
+      "category": "Visualization (Bar Chart)",
+      "query": "Buatkan grafik batang yang membandingkan profit di setiap region",
+      "expected_intent": "visualization",
+      "expected_chart_type": "bar",
+      "expected_x_axis": "region",
+      "expected_y_axis": "profit",
+      "description": "Menguji kemampuan agen mengenali intent visualisasi dan memetakan sumbu (x dan y) yang tepat."
+    },
+    {
+      "id": "TC_004",
+      "category": "Filtering & Sorting",
+      "query": "Sebutkan 5 kota dengan total sales tertinggi di region West",
+      "expected_intent": "answer_question",
+      "expected_metrics": ["gmv"],
+      "expected_filters": [
+        {"column": "region", "operator": "==", "value": "West"}
+      ],
+      "expected_sort": {"column": "gmv", "ascending": false},
+      "expected_limit": 5,
+      "description": "Menguji filter kategorial, pengurutan menurun (descending), dan pembatasan baris (Top 5)."
+    },
+    {
+      "id": "TC_005",
+      "category": "Numerical Filtering",
+      "query": "Tampilkan pesanan yang nilai diskonnya lebih besar dari 0.3",
+      "expected_intent": "answer_question",
+      "description": "Menguji pemahaman agen terhadap operator matematika numerik (jika ada)."
+    },
+    {
+      "id": "TC_006",
+      "category": "Visualization (Line Chart / Trend)",
+      "query": "Bagaimana tren penjualan kita dari waktu ke waktu?",
+      "expected_intent": "visualization",
+      "expected_chart_type": "line",
+      "expected_x_axis": "order_date",
+      "expected_y_axis": "gmv",
+      "description": "Menguji kecerdasan logis agen dalam memilih Line Chart untuk representasi deret waktu (time-series)."
+    },
+    {
+      "id": "TC_007",
+      "category": "Edge Case: Ambiguity / Typo",
+      "query": "brp proft di ktgori tekhnologi?",
+      "expected_intent": "answer_question",
+      "expected_metrics": ["profit"],
+      "expected_filters": [
+        {"column": "category", "operator": "in", "value": "Technology"}
+      ],
+      "description": "Menguji toleransi sistem terhadap typo (salah ketik parah) dari pengguna."
+    },
+    {
+      "id": "TC_008",
+      "category": "Edge Case: Out of Domain Guardrail",
+      "query": "Siapa presiden Indonesia saat ini?",
+      "expected_intent": "out_of_domain",
+      "expected_metrics": [],
+      "description": "Menguji keamanan (fallback mechanism). Agen harus mengembalikan intent out_of_domain dan tidak boleh berhalusinasi menjawab pertanyaan di luar konteks data."
+    },
+    {
+      "id": "TC_009",
+      "category": "Edge Case: Missing Column / Hallucination Check",
+      "query": "Berapa rata-rata umur pelanggan kita?",
+      "expected_intent": "answer_question",
+      "expected_metrics": [],
+      "description": "Kolom 'umur pelanggan' tidak ada di dataset Superstore. Agen harus menolak memberikan query yang memanggil kolom palsu."
+    },
+    {
+      "id": "TC_010",
+      "category": "Complex Multi-Condition Visualization",
+      "query": "Buatkan grafik pie profit per segmen, khusus untuk region East yang penjualannya di atas 100",
+      "expected_intent": "visualization",
+      "expected_chart_type": "pie",
+      "expected_filters": [
+        {"column": "region", "operator": "==", "value": "East"},
+        {"column": "gmv", "operator": ">", "value": 100}
+      ],
+      "description": "Menguji kemampuan perencana grafik untuk memproses multi-filter (string dan numerik) sekaligus tipe chart pie."
+    },
+    {
+      "id": "TC_011",
+      "category": "Visualization (Box Plot)",
+      "query": "Tampilkan sebaran data profit di tiap segment menggunakan box plot",
+      "expected_intent": "visualization",
+      "expected_chart_type": "box",
+      "expected_x_axis": "segment",
+      "expected_y_axis": "profit",
+      "description": "Menguji kemampuan agen membuat Box Plot untuk melihat distribusi data berdasarkan kategori."
+    },
+    {
+      "id": "TC_012",
+      "category": "Visualization (Scatter Plot)",
+      "query": "Apakah ada korelasi antara cost dan profit? Buatkan scatter plot",
+      "expected_intent": "visualization",
+      "expected_chart_type": "scatter",
+      "expected_x_axis": "cost",
+      "expected_y_axis": "profit",
+      "description": "Menguji kemampuan agen mengenali intent scatter plot untuk korelasi dua variabel numerik."
+    }
+  ]
+}
