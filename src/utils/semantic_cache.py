@@ -83,5 +83,22 @@ class SemanticCache:
         except Exception as e:
             print(f"Error saving to cache: {e}")
 
+    def clear(self):
+        self.texts = []
+        self.schemas = []
+        self.index = faiss.IndexFlatIP(self.dim)
+        
+        if os.path.exists(self.index_file):
+            try:
+                os.remove(self.index_file)
+            except OSError:
+                pass
+                
+        if os.path.exists(self.data_file):
+            try:
+                os.remove(self.data_file)
+            except OSError:
+                pass
+        
 # Singleton instance
 semantic_cache = SemanticCache()

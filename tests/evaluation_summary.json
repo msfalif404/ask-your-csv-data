@@ -4,6 +4,11 @@
     "passed": 12,
     "failed": 0,
     "accuracy_percentage": 100.0,
+    "latency_metrics": {
+        "average_latency_before_cache_sec": 6.623,
+        "average_latency_after_cache_sec": 2.238,
+        "cache_speedup_percentage": 66.21
+    },
     "detailed_results": [
         {
             "id": "TC_001",
@@ -11,6 +16,7 @@
             "query": "Berapa total keuntungan secara keseluruhan?",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 9.205077886581421,
             "audit_trail": {
                 "metrics": [
                     "profit"
@@ -20,7 +26,8 @@
                 "filters": null,
                 "sort": null,
                 "limit": null
-            }
+            },
+            "latency_after_cache_sec": 1.787182092666626
         },
         {
             "id": "TC_002",
@@ -28,6 +35,7 @@
             "query": "Tampilkan total penjualan per sub-kategori",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 7.09394907951355,
             "audit_trail": {
                 "metrics": [
                     "gmv"
@@ -39,7 +47,8 @@
                 "filters": null,
                 "sort": null,
                 "limit": null
-            }
+            },
+            "latency_after_cache_sec": 3.236114263534546
         },
         {
             "id": "TC_003",
@@ -47,6 +56,7 @@
             "query": "Buatkan grafik batang yang membandingkan profit di setiap region",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 8.533828735351562,
             "audit_trail": {
                 "metrics": [
                     "profit"
@@ -69,7 +79,8 @@
                 "x_axis_title": "Region",
                 "y_axis_title": "Total Profit",
                 "insight_text": "Grafik ini menunjukkan total profit yang dihasilkan di setiap region."
-            }
+            },
+            "latency_after_cache_sec": 2.5630600452423096
         },
         {
             "id": "TC_004",
@@ -77,6 +88,7 @@
             "query": "Sebutkan 5 kota dengan total sales tertinggi di region West",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.878773927688599,
             "audit_trail": {
                 "metrics": [
                     "gmv"
@@ -97,7 +109,8 @@
                     "ascending": false
                 },
                 "limit": 5
-            }
+            },
+            "latency_after_cache_sec": 2.261298179626465
         },
         {
             "id": "TC_005",
@@ -105,6 +118,7 @@
             "query": "Tampilkan pesanan yang nilai diskonnya lebih besar dari 0.3",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.89498496055603,
             "audit_trail": {
                 "metrics": [],
                 "aggregation": "none",
@@ -118,7 +132,8 @@
                 ],
                 "sort": null,
                 "limit": null
-            }
+            },
+            "latency_after_cache_sec": 1.9214606285095215
         },
         {
             "id": "TC_006",
@@ -126,6 +141,7 @@
             "query": "Bagaimana tren penjualan kita dari waktu ke waktu?",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.883779764175415,
             "audit_trail": {
                 "metrics": [
                     "gmv"
@@ -149,7 +165,8 @@
                 "x_axis_title": "Bulan",
                 "y_axis_title": "Nilai Penjualan (GMV)",
                 "insight_text": "Grafik ini menunjukkan tren penjualan kita dari waktu ke waktu."
-            }
+            },
+            "latency_after_cache_sec": 2.8889853954315186
         },
         {
             "id": "TC_007",
@@ -157,6 +174,7 @@
             "query": "brp proft di ktgori tekhnologi?",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 5.597118616104126,
             "audit_trail": {
                 "metrics": [
                     "profit"
@@ -172,7 +190,8 @@
                 ],
                 "sort": null,
                 "limit": null
-            }
+            },
+            "latency_after_cache_sec": 2.0341033935546875
         },
         {
             "id": "TC_008",
@@ -180,7 +199,9 @@
             "query": "Siapa presiden Indonesia saat ini?",
             "status": "✅ PASSED",
             "errors": [],
-            "audit_trail": null
+            "latency_before_cache_sec": 1.3095238208770752,
+            "audit_trail": null,
+            "latency_after_cache_sec": 1.0560836791992188
         },
         {
             "id": "TC_009",
@@ -188,6 +209,7 @@
             "query": "Berapa rata-rata umur pelanggan kita?",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.218991756439209,
             "audit_trail": {
                 "metrics": [],
                 "aggregation": "none",
@@ -195,7 +217,8 @@
                 "filters": null,
                 "sort": null,
                 "limit": null
-            }
+            },
+            "latency_after_cache_sec": 2.005110025405884
         },
         {
             "id": "TC_010",
@@ -203,6 +226,7 @@
             "query": "Buatkan grafik pie profit per segmen, khusus untuk region East yang penjualannya di atas 100",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.064962148666382,
             "audit_trail": {
                 "metrics": [
                     "profit"
@@ -233,7 +257,8 @@
                 "x_axis_title": "Segmen",
                 "y_axis_title": "Total Profit",
                 "insight_text": "Grafik ini menunjukkan proporsi profit yang dihasilkan dari setiap segmen pasar di wilayah East dengan penjualan di atas 100."
-            }
+            },
+            "latency_after_cache_sec": 1.558523416519165
         },
         {
             "id": "TC_011",
@@ -241,6 +266,7 @@
             "query": "Tampilkan sebaran data profit di tiap segment menggunakan box plot",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 8.49080777168274,
             "audit_trail": {
                 "metrics": [
                     "profit"
@@ -260,7 +286,8 @@
                 "x_axis_title": "Segment",
                 "y_axis_title": "Profit",
                 "insight_text": "Grafik ini menunjukkan sebaran profit berdasarkan segmen pasar."
-            }
+            },
+            "latency_after_cache_sec": 2.7866899967193604
         },
         {
             "id": "TC_012",
@@ -268,6 +295,7 @@
             "query": "Apakah ada korelasi antara cost dan profit? Buatkan scatter plot",
             "status": "✅ PASSED",
             "errors": [],
+            "latency_before_cache_sec": 6.299988746643066,
             "audit_trail": {
                 "metrics": [
                     "cost",
@@ -286,7 +314,8 @@
                 "x_axis_title": "Cost",
                 "y_axis_title": "Profit",
                 "insight_text": "Grafik berikut menunjukkan hubungan antara biaya dan keuntungan."
-            }
+            },
+            "latency_after_cache_sec": 2.7584409713745117
         }
     ]
 }
