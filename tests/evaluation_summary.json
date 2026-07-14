@@ -19,8 +19,7 @@
                 "group_by": null,
                 "filters": null,
                 "sort": null,
-                "limit": null,
-                "response_template": "Berikut adalah total keuntungan secara keseluruhan:"
+                "limit": null
             }
         },
         {
@@ -39,8 +38,7 @@
                 ],
                 "filters": null,
                 "sort": null,
-                "limit": null,
-                "response_template": "Berikut adalah total penjualan berdasarkan sub-kategori:"
+                "limit": null
             }
         },
         {
@@ -98,8 +96,7 @@
                     "column": "gmv",
                     "ascending": false
                 },
-                "limit": 5,
-                "response_template": "Berikut adalah 5 kota dengan total sales tertinggi di region West:"
+                "limit": 5
             }
         },
         {
@@ -120,8 +117,7 @@
                     }
                 ],
                 "sort": null,
-                "limit": null,
-                "response_template": "Berikut adalah daftar pesanan dengan nilai diskon lebih besar dari 0.3."
+                "limit": null
             }
         },
         {
@@ -136,20 +132,21 @@
                 ],
                 "aggregation": "sum",
                 "group_by": [
-                    "order_date"
+                    "order_year",
+                    "order_month"
                 ],
                 "filters": null,
                 "sort": {
-                    "column": "order_date",
+                    "column": "order_year",
                     "ascending": true
                 },
                 "limit": null,
                 "chart_type": "line",
-                "x_axis": "order_date",
+                "x_axis": "order_month",
                 "y_axis": "gmv",
                 "color": null,
                 "title": "Tren Penjualan dari Waktu ke Waktu",
-                "x_axis_title": "Tanggal Pesanan",
+                "x_axis_title": "Bulan",
                 "y_axis_title": "Nilai Penjualan (GMV)",
                 "insight_text": "Grafik ini menunjukkan tren penjualan kita dari waktu ke waktu."
             }
@@ -174,8 +171,7 @@
                     }
                 ],
                 "sort": null,
-                "limit": null,
-                "response_template": "Berikut adalah total profit di kategori Teknologi:"
+                "limit": null
             }
         },
         {
@@ -198,8 +194,7 @@
                 "group_by": null,
                 "filters": null,
                 "sort": null,
-                "limit": null,
-                "response_template": "Maaf, tetapi saya tidak memiliki informasi tentang umur pelanggan."
+                "limit": null
             }
         },
         {

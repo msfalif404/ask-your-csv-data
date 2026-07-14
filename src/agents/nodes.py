@@ -6,7 +6,7 @@ from src.prompts.manager import PromptManager
 from src.models.router import IntentRouterSchema
 from src.models.selector import ColumnSelectorSchema
 from src.models.visualization import VisualizationSchema
-from src.models.answer import AnswerSchema
+from src.models.query import DataQuerySchema
 from src.utils.schema_catalog import get_all_columns_with_descriptions, build_schema_context
 from src.utils.query_engine import execute_query
 from src.utils.data_loader import get_data_path, load_data
@@ -62,12 +62,12 @@ def select_schema_node(state: AskDataState):
     })
     return {"selected_columns": result.selected_columns}
 
-def answer_planner_node(state: AskDataState):
+def _invoke_planner(state: AskDataState, prompt_template: str, schema_class):
     prompt = ChatPromptTemplate.from_messages([
-        ("system", prompt_manager.answer_planner_prompt),
+        ("system", prompt_template),
         MessagesPlaceholder(variable_name="messages")
     ])
-    chain = prompt | llm.with_structured_output(AnswerSchema)
+    chain = prompt | llm.with_structured_output(schema_class)
     result = chain.invoke({
         "messages": state["messages"],
         "schema_context": build_schema_context(state["selected_columns"])
@@ -78,21 +78,11 @@ def answer_planner_node(state: AskDataState):
     
     return {"dsl_schema": result}
 
+def answer_planner_node(state: AskDataState):
+    return _invoke_planner(state, prompt_manager.answer_planner_prompt, DataQuerySchema)
+
 def visualization_planner_node(state: AskDataState):
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", prompt_manager.visualization_planner_prompt),
-        MessagesPlaceholder(variable_name="messages")
-    ])
-    chain = prompt | llm.with_structured_output(VisualizationSchema)
-    result = chain.invoke({
-        "messages": state["messages"],
-        "schema_context": build_schema_context(state["selected_columns"])
-    })
-    
-    query = state["messages"][-1].content
-    semantic_cache.add_to_cache(query, state["intent"], result.model_dump())
-    
-    return {"dsl_schema": result}
+    return _invoke_planner(state, prompt_manager.visualization_planner_prompt, VisualizationSchema)
 
 def executor_node(state: AskDataState):
     try:

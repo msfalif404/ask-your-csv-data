@@ -5,7 +5,7 @@ import faiss
 from langchain_openai import OpenAIEmbeddings
 from config.settings import OPENAI_API_KEY
 from src.models.visualization import VisualizationSchema
-from src.models.answer import AnswerSchema
+from src.models.query import DataQuerySchema
 
 class SemanticCache:
     def __init__(self, threshold=0.99, index_file="tests/semantic_cache.index", data_file="tests/semantic_cache.json"):
@@ -53,7 +53,7 @@ class SemanticCache:
                 if intent == "visualization":
                     schema_obj = VisualizationSchema(**schema_dict)
                 else:
-                    schema_obj = AnswerSchema(**schema_dict)
+                    schema_obj = DataQuerySchema(**schema_dict)
                     
                 return {
                     "intent": intent,

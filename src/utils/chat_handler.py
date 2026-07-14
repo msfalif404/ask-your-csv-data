@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import uuid
 from src.agents.graph import build_ask_data_graph
-from src.utils.query_engine import execute_query, render_visualization
+from src.utils.query_engine import execute_query
+from src.utils.chart_builder import render_visualization
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -43,6 +44,24 @@ def _handle_agent_error(error_message: str):
     st.error(error_message)
     st.session_state.messages.append({"role": "assistant", "text": error_message})
 
+def _handle_visualization_response(schema, df_result, final_text):
+    message_data = {"role": "assistant", "text": final_text, "schema": schema.model_dump(), "raw_df": df_result}
+    figure = render_visualization(df_result, schema)
+    if figure:
+        st.plotly_chart(figure, key=f"new_fig_{uuid.uuid4().hex}")
+        message_data["figure"] = figure
+    else:
+        st.warning("Gagal merender grafik. Pastikan kolom valid.")
+        st.dataframe(df_result)
+        message_data["dataframe"] = df_result
+    return message_data
+
+def _handle_tabular_response(schema, df_result, final_text):
+    message_data = {"role": "assistant", "text": final_text, "schema": schema.model_dump(), "raw_df": df_result}
+    st.dataframe(df_result)
+    message_data["dataframe"] = df_result
+    return message_data
+
 def process_graph_response(prompt: str, dataframe: pd.DataFrame):
     result_state = _invoke_agent_graph(prompt)
     
@@ -62,26 +81,17 @@ def process_graph_response(prompt: str, dataframe: pd.DataFrame):
         
     df_result = execute_query(dataframe, schema)
     
-    final_text = analysis_text if analysis_text else (schema.insight_text if intent == "visualization" else schema.response_template)
+    final_text = analysis_text if analysis_text else (getattr(schema, "insight_text", "") if intent == "visualization" else getattr(schema, "response_template", "Analisis berhasil."))
     
     if result_state.get("is_cache_hit", False):
         final_text = f"⚡ **[Hit from Semantic Cache]**\n\n" + final_text
         
     st.markdown(final_text)
-    message_data = {"role": "assistant", "text": final_text, "schema": schema.model_dump(), "raw_df": df_result}
     
     if intent == "visualization":
-        figure = render_visualization(df_result, schema)
-        if figure:
-            st.plotly_chart(figure, key=f"new_fig_{uuid.uuid4().hex}")
-            message_data["figure"] = figure
-        else:
-            st.warning("Gagal merender grafik. Pastikan kolom valid.")
-            st.dataframe(df_result)
-            message_data["dataframe"] = df_result
+        message_data = _handle_visualization_response(schema, df_result, final_text)
     else:
-        st.dataframe(df_result)
-        message_data["dataframe"] = df_result
+        message_data = _handle_tabular_response(schema, df_result, final_text)
         
     _render_audit_trail(schema.model_dump(), df_result)
     st.session_state.messages.append(message_data)
